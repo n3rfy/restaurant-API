@@ -1,9 +1,10 @@
-from ..database.database import database
-from ..database.tables import order as order_t
-
+from ..database.tables import Order
+from ..models.cook import AllOpenOrderResponse
 
 
 async def get_open_oreders():
-    query = order_t.select().where(order_t.c.status == 'open')
-    res = await database.fetch_all(query)
-    print(res)
+     orders = await Order.objects.select_all().filter(status='open').all()
+     return AllOpenOrderResponse(
+        data=orders,
+        count_order=len(orders),
+    )

@@ -1,53 +1,58 @@
-from sqlalchemy import (
-    Column, 
-    Table, 
-    Integer, 
-    String, 
-    Numeric, 
-    DateTime,
-    ForeignKey,
-    Boolean,
-)
-from .database import metadata
+from .database import metadata, database
 from datetime import datetime
 
+from typing import Optional, Union
+import ormar
 
-staff = Table(
-    "staff",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("role", String),
-    Column("name", String),
-    Column("salary", Numeric(10,2)),
-    Column("login", String),
-    Column("password", String),
-)
+class Waiter(ormar.Model):
+    class Meta:
+        metadata = metadata
+        database = database
 
-order = Table(
-    "order",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("status", String),
-    Column("time_open", DateTime, default=datetime.utcnow),
-    Column("time_close", DateTime, default=datetime.utcnow),
-    Column("price", Numeric(10,2)),
-    Column("waiter_id", ForeignKey("staff.id")),
-    Column("cook_id", ForeignKey("staff.id")),
-)
+    id = ormar.Integer(primary_key=True)
+    name = ormar.String(max_length=150)
+    salary = ormar.Float()
+    
+class Cook(ormar.Model):
+    class Meta:
+        metadata = metadata
+        database = database
 
-food = Table(
-    "food",
-    metadata,
-    Column("id", Integer, primary_key=True),
-    Column("name", String, unique=True),
-    Column("price", Numeric(10,2)),
-)
+    id = ormar.Integer(primary_key=True)
+    name = ormar.String(max_length=150)
+    salary = ormar.Float()
+   
+class Food(ormar.Model):
+    class Meta:
+        metadata = metadata
+        database = database
+    
+    id = ormar.Integer(primary_key=True)
+    name = ormar.String(max_length=150)
+    price = ormar.Float()
 
-orderfood = Table(
-    "orderfood",
-    metadata,
-    Column('order_id', ForeignKey('order.id')),
-    Column('food_id', ForeignKey('food.id')),
-    Column('status', Boolean),
-)
+class OrderFood(ormar.Model):
+     class Meta:
+        tablename = "order_foods"
+        metadata = metadata
+        database = database
 
+class Order(ormar.Model):
+    class Meta:
+        metadata = metadata
+        database = database
+
+    id: int = ormar.Integer(primary_key=True)
+    status: str = ormar.String(max_length=30)
+    foods: Union[Food, list[Food]] = ormar.ManyToMany(
+        Food, relation_name='orders', through=OrderFood
+    )
+    time_open: datetime = ormar.DateTime(default=datetime.utcnow())    
+    time_close: Optional[datetime] = ormar.DateTime(default=datetime.utcnow())
+    price: float = ormar.Float()
+    waiter: Union[Waiter, dict] = ormar.ForeignKey(
+        Waiter, relation_name='orders', name='waiter_id'
+    )
+    cook: Optional[Union[Cook, dict]] = ormar.ForeignKey(
+        Cook, relation_name='orders', name='cook_id'
+    )

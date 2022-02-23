@@ -10,12 +10,13 @@ class StatusKind(str, Enum):
 
 class Food(BaseModel):
     id: int
-
+    name: str
+    price: float
 class CreateOrder(BaseModel):
     status = 'open'
-    foods: list[Food]
-    waiter_id: int
-
+    foods: list[int]
+    waiter: int
+    price: float
 
 class ResponseFullOrder(BaseModel):
     id: int
